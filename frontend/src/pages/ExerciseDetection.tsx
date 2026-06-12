@@ -339,6 +339,18 @@ export const ExerciseDetection: React.FC = () => {
                 </ul>
               </div>
             </div>
+          ) : loading ? (
+            <div className="h-64 flex flex-col justify-center items-center text-slate-400 text-sm border border-dashed border-primary/20 rounded-xl space-y-4">
+              <div className="relative flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <Dumbbell className="h-5 w-5 text-primary absolute animate-bounce" />
+              </div>
+              <div className="text-center space-y-1">
+                <span className="font-bold text-white block">Processing Video File...</span>
+                <span className="text-xs text-slate-400 block">FastAPI is running YOLOv8 Pose Estimation keypoints frame-by-frame.</span>
+                <span className="text-[10px] text-accent-cyan block">This can take up to 2-3 minutes for large 4K files.</span>
+              </div>
+            </div>
           ) : (
             <div className="h-64 flex flex-col justify-center items-center text-slate-500 text-sm border border-dashed border-white/5 rounded-xl">
               <Video className="h-10 w-10 text-slate-600 mb-2" />

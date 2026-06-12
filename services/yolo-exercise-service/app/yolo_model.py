@@ -88,14 +88,15 @@ class ExerciseProcessor:
                 
                 person_kps = keypoints[0] # Track the primary subject
                 
-                if len(person_kps) > 28:
-                    hip = person_kps[23][:2]
-                    knee = person_kps[25][:2]
-                    ankle = person_kps[27][:2]
-                    shoulder = person_kps[11][:2]
+                if len(person_kps) >= 17:
+                    # COCO Pose indices: 5: Left Shoulder, 11: Left Hip, 13: Left Knee, 15: Left Ankle
+                    hip = person_kps[11][:2]
+                    knee = person_kps[13][:2]
+                    ankle = person_kps[15][:2]
+                    shoulder = person_kps[5][:2]
 
                     # Verify keypoints confidence
-                    if person_kps[23][2] > 0.5 and person_kps[25][2] > 0.5 and person_kps[27][2] > 0.5:
+                    if person_kps[11][2] > 0.5 and person_kps[13][2] > 0.5 and person_kps[15][2] > 0.5:
                         knee_angle = self.calculate_angle(hip, knee, ankle)
                         hip_angle = self.calculate_angle(shoulder, hip, knee)
 
