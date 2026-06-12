@@ -1,8 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  --color-background: #0a0a0f;
+  --color-card: #12121e;
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-secondary: #10b981;
+  --color-secondary-hover: #059669;
+  --color-accent-purple: #d946ef;
+  --color-accent-cyan: #06b6d4;
+  --color-accent-rose: #f43f5e;
+  --font-sans: "Outfit", "Inter", sans-serif;
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  --shadow-glass-sm: 0 4px 16px 0 rgba(31, 38, 135, 0.25);
+}
 
 @layer base {
   body {
