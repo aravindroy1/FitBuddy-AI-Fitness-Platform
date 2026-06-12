@@ -52,7 +52,8 @@ export const ExerciseDetection: React.FC = () => {
       }
       setResult(res.data);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to analyze video. Loaded simulated reports.');
+      const errMsg = err.response?.data?.error || err.response?.data?.detail || err.message || 'Unknown network error';
+      setError(`Failed to analyze video (${errMsg}). Loaded simulated reports.`);
       // Fallback details
       setResult({
         exercise: exercise.toUpperCase(),
