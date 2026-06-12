@@ -20,6 +20,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Ensure the static directory exists before mounting
+os.makedirs("static", exist_ok=True)
+
 # Mount the static directory to serve processed videos
 app.mount("/processed", StaticFiles(directory="static"), name="static")
 
