@@ -1,0 +1,147 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: bodygpt-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - bodygpt-network
+
+  auth-service:
+    build: ./services/auth-service
+    container_name: bodygpt-auth-service
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - MONGO_URI=mongodb://mongodb:27017/bodygpt
+      - JWT_ACCESS_SECRET=bodygpt_access_secret_12345!
+      - JWT_REFRESH_SECRET=bodygpt_refresh_secret_12345!
+    depends_on:
+      - mongodb
+    networks:
+      - bodygpt-network
+
+  user-service:
+    build: ./services/user-service
+    container_name: bodygpt-user-service
+    ports:
+      - "5002:5002"
+    environment:
+      - PORT=5002
+      - MONGO_URI=mongodb://mongodb:27017/bodygpt
+      - JWT_ACCESS_SECRET=bodygpt_access_secret_12345!
+    depends_on:
+      - mongodb
+    networks:
+      - bodygpt-network
+
+  diet-service:
+    build: ./services/diet-service
+    container_name: bodygpt-diet-service
+    ports:
+      - "5003:5003"
+    environment:
+      - PORT=5003
+      - MONGO_URI=mongodb://mongodb:27017/bodygpt
+      - JWT_ACCESS_SECRET=bodygpt_access_secret_12345!
+    depends_on:
+      - mongodb
+    networks:
+      - bodygpt-network
+
+  workout-service:
+    build: ./services/workout-service
+    container_name: bodygpt-workout-service
+    ports:
+      - "5004:5004"
+    environment:
+      - PORT=5004
+      - MONGO_URI=mongodb://mongodb:27017/bodygpt
+      - JWT_ACCESS_SECRET=bodygpt_access_secret_12345!
+    depends_on:
+      - mongodb
+    networks:
+      - bodygpt-network
+
+  chatbot-service:
+    build: ./services/chatbot-service
+    container_name: bodygpt-chatbot-service
+    ports:
+      - "5005:5005"
+    environment:
+      - PORT=5005
+      - MONGO_URI=mongodb://mongodb:27017/bodygpt
+      - JWT_ACCESS_SECRET=bodygpt_access_secret_12345!
+    depends_on:
+      - mongodb
+    networks:
+      - bodygpt-network
+
+  progress-service:
+    build: ./services/progress-service
+    container_name: bodygpt-progress-service
+    ports:
+      - "5006:5006"
+    environment:
+      - PORT=5006
+      - MONGO_URI=mongodb://mongodb:27017/bodygpt
+      - JWT_ACCESS_SECRET=bodygpt_access_secret_12345!
+    depends_on:
+      - mongodb
+    networks:
+      - bodygpt-network
+
+  yolo-exercise-service:
+    build: ./services/yolo-exercise-service
+    container_name: bodygpt-yolo-exercise-service
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - MONGO_URI=mongodb://mongodb:27017/bodygpt
+    depends_on:
+      - mongodb
+    networks:
+      - bodygpt-network
+
+  food-recognition-service:
+    build: ./services/food-recognition-service
+    container_name: bodygpt-food-recognition-service
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - MONGO_URI=mongodb://mongodb:27017/bodygpt
+    depends_on:
+      - mongodb
+    networks:
+      - bodygpt-network
+
+  frontend:
+    build: ./frontend
+    container_name: bodygpt-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - auth-service
+      - user-service
+      - diet-service
+      - workout-service
+      - chatbot-service
+      - progress-service
+      - yolo-exercise-service
+      - food-recognition-service
+    networks:
+      - bodygpt-network
+
+volumes:
+  mongo-data:
+
+networks:
+  bodygpt-network:
+    driver: bridge

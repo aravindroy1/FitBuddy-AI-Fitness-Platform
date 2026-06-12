@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-slate-100 font-sans antialiased overflow-x-hidden;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+/* Glassmorphism custom classes */
+.glass-panel {
+  @apply bg-card/65 backdrop-blur-xl border border-white/5 rounded-2xl shadow-glass;
+}
+
+.glass-panel-sm {
+  @apply bg-card/45 backdrop-blur-md border border-white/5 rounded-xl shadow-glass-sm;
+}
+
+/* Custom scrollbar styling for modern appearance */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-800 rounded-full hover:bg-slate-700 transition-colors;
+}

@@ -1,0 +1,95 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bodygpt-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway
+    appgw.ingress.kubernetes.io/ssl-redirect: "true"
+    appgw.ingress.kubernetes.io/backend-path-prefix: "/"
+    appgw.ingress.kubernetes.io/connection-draining: "true"
+    appgw.ingress.kubernetes.io/connection-draining-timeout: "30"
+spec:
+  rules:
+  - http:
+      paths:
+      # Auth Service APIs routing
+      - path: /api/auth
+        pathType: Prefix
+        backend:
+          service:
+            name: auth-service
+            port:
+              number: 5001
+      
+      # User Profile APIs routing
+      - path: /api/user
+        pathType: Prefix
+        backend:
+          service:
+            name: user-service
+            port:
+              number: 5002
+
+      # Diet Planner APIs routing
+      - path: /api/diet
+        pathType: Prefix
+        backend:
+          service:
+            name: diet-service
+            port:
+              number: 5003
+
+      # Workout Planner APIs routing
+      - path: /api/workout
+        pathType: Prefix
+        backend:
+          service:
+            name: workout-service
+            port:
+              number: 5004
+
+      # AI Coach Chatbot APIs routing
+      - path: /api/chat
+        pathType: Prefix
+        backend:
+          service:
+            name: chatbot-service
+            port:
+              number: 5005
+
+      # Progress tracking APIs routing
+      - path: /api/progress
+        pathType: Prefix
+        backend:
+          service:
+            name: progress-service
+            port:
+              number: 5006
+
+      # YOLO Exercise CV routing
+      - path: /api/exercise
+        pathType: Prefix
+        backend:
+          service:
+            name: yolo-exercise-service
+            port:
+              number: 8001
+
+      # Food recognition CV routing
+      - path: /api/food
+        pathType: Prefix
+        backend:
+          service:
+            name: food-recognition-service
+            port:
+              number: 8002
+
+      # React Web App Frontend assets fallback routing
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80

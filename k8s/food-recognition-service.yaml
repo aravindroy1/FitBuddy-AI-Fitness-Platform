@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: food-recognition-service
+  namespace: default
+  labels:
+    app: food-recognition-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: food-recognition-service
+  template:
+    metadata:
+      labels:
+        app: food-recognition-service
+    spec:
+      containers:
+      - name: food-recognition-service
+        image: bodygptacr.azurecr.io/food-recognition-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8002
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 30
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: bodygpt-config
+              key: FOOD_RECOGNITION_PORT
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: bodygpt-secrets
+              key: MONGO_URI
+        - name: AZURE_SERVICEBUS_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: bodygpt-secrets
+              key: AZURE_SERVICEBUS_CONNECTION_STRING
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: food-recognition-service
+  namespace: default
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8002
+    targetPort: 8002
+    protocol: TCP
+  selector:
+    app: food-recognition-service
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: food-recognition-service-hpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: food-recognition-service
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
