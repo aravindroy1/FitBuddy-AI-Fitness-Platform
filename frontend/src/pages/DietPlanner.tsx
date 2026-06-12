@@ -94,7 +94,6 @@ export const DietPlanner: React.FC = () => {
   };
 
   const handleSubstitute = async (mealIndex: number, foodItem: string) => {
-    setSubsLoading(true);
     try {
       const res = await api.diet.substitute(diet?.meals[mealIndex].name || '', foodItem);
       setActiveSubstitute({
@@ -109,8 +108,6 @@ export const DietPlanner: React.FC = () => {
         foodItem,
         options: ['Tofu Scramble (150g)', 'Tempeh strips (100g)', 'Seitan slices (100g)']
       });
-    } finally {
-      setSubsLoading(false);
     }
   };
 
