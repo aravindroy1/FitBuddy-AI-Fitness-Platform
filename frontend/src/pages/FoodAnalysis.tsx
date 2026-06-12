@@ -57,6 +57,9 @@ export const FoodAnalysis: React.FC = () => {
 
     try {
       const res = await api.food.analyze(userId, selectedFile);
+      if (res.data.error) {
+        throw new Error(res.data.error);
+      }
       setResult(res.data);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to analyze food image. Loaded simulated records.');
@@ -124,7 +127,7 @@ export const FoodAnalysis: React.FC = () => {
       ctx.drawImage(img, 0, 0);
 
       // Draw bounding boxes
-      result.detectedItems.forEach(item => {
+      result.detectedItems?.forEach(item => {
         const [x1, y1, x2, y2] = item.box;
         const width = x2 - x1;
         const height = y2 - y1;
@@ -242,7 +245,7 @@ export const FoodAnalysis: React.FC = () => {
                 <div className="space-y-2">
                   <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Detected Ingredients</span>
                   <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
-                    {result.detectedItems.map((item, idx) => (
+                    {result.detectedItems?.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center p-2.5 rounded-xl bg-white/5 border border-white/5 text-sm">
                         <span className="text-slate-300 font-medium">{item.name}</span>
                         <span className="text-secondary font-bold">Conf: {Math.round(item.confidence * 100)}%</span>

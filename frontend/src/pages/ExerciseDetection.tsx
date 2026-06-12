@@ -46,6 +46,9 @@ export const ExerciseDetection: React.FC = () => {
 
     try {
       const res = await api.exercise.analyze(userId, exercise, selectedFile);
+      if (res.data.error) {
+        throw new Error(res.data.error);
+      }
       setResult(res.data);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to analyze video. Loaded simulated reports.');
@@ -327,7 +330,7 @@ export const ExerciseDetection: React.FC = () => {
               <div className="space-y-3">
                 <h4 className="font-bold text-white text-sm">Form Correction Criticisms:</h4>
                 <ul className="space-y-2">
-                  {result.feedback.map((f, idx) => (
+                  {result.feedback?.map((f, idx) => (
                     <li key={idx} className="flex gap-3 items-start p-3 bg-white/5 border border-white/5 rounded-xl text-sm text-slate-300">
                       <AlertCircle className="h-5 w-5 text-accent-cyan shrink-0" />
                       <span>{f}</span>

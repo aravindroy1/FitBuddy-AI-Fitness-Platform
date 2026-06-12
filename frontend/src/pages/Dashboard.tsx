@@ -7,6 +7,7 @@ import {
 import {
   TrendingDown, Award, Flame, Dumbbell, Scale, Activity, Plus
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ProgressRecord {
   weight: number;
@@ -16,6 +17,7 @@ interface ProgressRecord {
 
 export const Dashboard: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
+  const [isMockProfile, setIsMockProfile] = useState(false);
   const [progress, setProgress] = useState<ProgressRecord[]>([]);
   const [diet, setDiet] = useState<any>(null);
   const [workout, setWorkout] = useState<any>(null);
@@ -28,6 +30,7 @@ export const Dashboard: React.FC = () => {
       const profileRes = await api.profile.get();
       setProfile(profileRes.data);
       setLogHeight(profileRes.data.height.toString());
+      setIsMockProfile(false);
     } catch (err) {
       // Setup Mock Profile for Premium View
       setProfile({
@@ -39,6 +42,7 @@ export const Dashboard: React.FC = () => {
         gender: 'male'
       });
       setLogHeight('180');
+      setIsMockProfile(true);
     }
 
     try {
@@ -149,6 +153,27 @@ export const Dashboard: React.FC = () => {
           <p className="text-slate-400 text-sm mt-1">Track metrics, logs, and progress predictions</p>
         </div>
       </div>
+
+      {/* Onboarding Profile Warning Banner */}
+      {isMockProfile && (
+        <div className="p-4 bg-primary/10 border border-white/5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-primary/20 rounded-xl text-primary">
+              <Activity className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-white text-sm">Action Required: Setup Your Profile Settings</h4>
+              <p className="text-xs text-slate-400">You are currently viewing placeholder data. Configure your weight, height, and fitness goals to activate personalized calculations.</p>
+            </div>
+          </div>
+          <Link
+            to="/profile"
+            className="bg-primary hover:bg-primary-hover text-white font-bold py-2 px-4 rounded-xl text-xs transition-all shrink-0"
+          >
+            Configure Profile
+          </Link>
+        </div>
+      )}
 
       {/* Quick Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
