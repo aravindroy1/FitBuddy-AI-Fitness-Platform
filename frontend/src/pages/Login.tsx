@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api.js';
 import { setAuthData } from '../store/authSlice.js';
-import { RootState } from '../store/index.js';
+import type { RootState } from '../store/index.js';
 import { Lock, Mail, Activity, ArrowRight } from 'lucide-react';
 
 export const Login: React.FC = () => {

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api.js';
 import { setVerified } from '../store/authSlice.js';
-import { RootState } from '../store/index.js';
+import type { RootState } from '../store/index.js';
 import { KeyRound, Activity, ArrowRight } from 'lucide-react';
 
 export const VerifyOtp: React.FC = () => {

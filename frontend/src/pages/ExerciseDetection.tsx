@@ -22,7 +22,7 @@ export const ExerciseDetection: React.FC = () => {
   // Live simulation states
   const [isLive, setIsLive] = useState(false);
   const [liveReps, setLiveReps] = useState(0);
-  const [liveAccuracy, setLiveAccuracy] = useState(95);
+  const [liveAccuracy] = useState(95);
   const [liveFeedback, setLiveFeedback] = useState<string[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number | null>(null);
@@ -193,6 +193,12 @@ export const ExerciseDetection: React.FC = () => {
         </h1>
         <p className="text-slate-400 text-sm mt-1">Upload files or start cameras to run computer vision form checks</p>
       </div>
+
+      {error && (
+        <div className="p-4 bg-accent-rose/10 border border-accent-rose/25 rounded-xl text-accent-rose text-sm">
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upload panel */}

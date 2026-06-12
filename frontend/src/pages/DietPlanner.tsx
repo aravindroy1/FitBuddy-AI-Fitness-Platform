@@ -25,7 +25,7 @@ export const DietPlanner: React.FC = () => {
   const [diet, setDiet] = useState<DietPlan | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [subsLoading, setSubsLoading] = useState(false);
+
   const [activeSubstitute, setActiveSubstitute] = useState<{ mealIndex: number; foodItem: string; options: string[] } | null>(null);
   const [error, setError] = useState('');
 

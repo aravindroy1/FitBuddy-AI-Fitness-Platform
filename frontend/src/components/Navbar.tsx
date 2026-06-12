@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store/index.js';
+import type { RootState } from '../store/index.js';
 import { logout } from '../store/authSlice.js';
 import { LogOut, User, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';

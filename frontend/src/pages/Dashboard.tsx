@@ -5,7 +5,7 @@ import {
   BarChart, Bar
 } from 'recharts';
 import {
-  TrendingDown, TrendingUp, Award, Flame, Dumbbell, Scale, Activity, Plus
+  TrendingDown, Award, Flame, Dumbbell, Scale, Activity, Plus
 } from 'lucide-react';
 
 interface ProgressRecord {

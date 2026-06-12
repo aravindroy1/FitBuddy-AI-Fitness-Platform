@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { api } from '../services/api.js';
 import {
-  Camera, Upload, Play, CheckCircle, AlertCircle, PieChart, Info
+  Camera, Upload, Play, PieChart
 } from 'lucide-react';
 
 interface DetectedItem {
@@ -157,6 +157,12 @@ export const FoodAnalysis: React.FC = () => {
         </h1>
         <p className="text-slate-400 text-sm mt-1">Snap food photos to extract calorie budgets and protein statistics</p>
       </div>
+
+      {error && (
+        <div className="p-4 bg-accent-rose/10 border border-accent-rose/25 rounded-xl text-accent-rose text-sm">
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upload Form */}

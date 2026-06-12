@@ -68,6 +68,12 @@ export const MedicalReports: React.FC = () => {
         <p className="text-slate-400 text-sm mt-1">Upload blood work or health diagnostics to retrieve AI diet corrections</p>
       </div>
 
+      {error && (
+        <div className="p-4 bg-accent-rose/10 border border-accent-rose/25 rounded-xl text-accent-rose text-sm">
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upload Form Panel */}
         <div className="glass-panel p-5 space-y-4 lg:col-span-1">
