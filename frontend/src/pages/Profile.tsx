@@ -67,8 +67,9 @@ export const Profile: React.FC = () => {
         await api.profile.create(payload);
         setMessage('Profile created successfully!');
         setTimeout(() => setMessage(''), 3000);
-      } catch (err2) {
-        setError('Failed to save profile details. Saving locally (mock).');
+      } catch (err2: any) {
+        const backendError = err2.response?.data?.error || err.response?.data?.error || 'Failed to save profile details';
+        setError(`${backendError}. Saving locally (mock).`);
         setTimeout(() => setError(''), 3500);
       }
     } finally {
