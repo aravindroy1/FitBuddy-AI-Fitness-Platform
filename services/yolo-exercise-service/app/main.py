@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 import time
 
+from fastapi.staticfiles import StaticFiles
 from app.config import MONGO_URI, PORT
 from app.yolo_model import ExerciseProcessor
 from app.servicebus_listener import ServiceBusListener
@@ -18,6 +19,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount the static directory to serve processed videos
+app.mount("/processed", StaticFiles(directory="static"), name="static")
 
 processor = ExerciseProcessor()
 sb_listener = ServiceBusListener()

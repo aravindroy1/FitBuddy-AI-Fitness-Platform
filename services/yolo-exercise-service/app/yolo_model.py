@@ -58,6 +58,24 @@ class ExerciseProcessor:
         if not cap.isOpened():
             return {"error": "Failed to open video source", "processed": False}
 
+        # Setup VideoWriter
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = cap.get(cv2.CAP_PROP_FPS) or 25
+        
+        output_filename = f"processed_{os.path.basename(video_path)}"
+        output_dir = "static"
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, output_filename)
+        
+        # Try avc1 (H.264) codec first for browser compatibility, fall back to mp4v if unavailable
+        fourcc = cv2.VideoWriter_fourcc(*'avc1')
+        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+        if not out.isOpened():
+            logger.warning("avc1 codec not available. Falling back to mp4v...")
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+
         rep_count = 0
         stage = "up"  # squat phase tracker ("up" vs "down")
         form_accuracy_scores = []
@@ -73,16 +91,14 @@ class ExerciseProcessor:
             # Run YOLOv8 Pose prediction on the frame
             results = self.model(frame, verbose=False)
             
+            # Default annotated frame is the copy of original
+            annotated_frame = frame.copy()
+            
             for result in results:
-                # Keypoints format: [x, y, confidence]
-                # Keypoint index references:
-                # 11: Left Shoulder, 12: Right Shoulder
-                # 13: Left Elbow, 14: Right Elbow
-                # 23: Left Hip, 24: Right Hip
-                # 25: Left Knee, 26: Right Knee
-                # 27: Left Ankle, 28: Right Ankle
-                keypoints = result.keypoints.data.cpu().numpy()
+                # Plot automatically connects joints and overlays boxes/confidence
+                annotated_frame = result.plot()
                 
+                keypoints = result.keypoints.data.cpu().numpy()
                 if len(keypoints) == 0:
                     continue
                 
@@ -116,8 +132,16 @@ class ExerciseProcessor:
                                 stage = "up"
                                 rep_count += 1
                                 logger.info(f"Rep counted! Total: {rep_count}")
+                                
+            # Draw Rep Count and Exercise stats overlay on the video
+            cv2.putText(annotated_frame, f"REPS: {rep_count}", (30, 80), cv2.FONT_HERSHEY_DUPLEX, 1.5, (0, 255, 0), 3)
+            cv2.putText(annotated_frame, f"STAGE: {stage.upper()}", (30, 140), cv2.FONT_HERSHEY_DUPLEX, 1.2, (255, 0, 0), 2)
+            
+            # Write frame to output video
+            out.write(annotated_frame)
 
         cap.release()
+        out.release()
         
         # Calculate final stats
         final_reps = rep_count if rep_count > 0 else 10 # Default mock backup if no movement matched
@@ -131,5 +155,6 @@ class ExerciseProcessor:
             "rep_count": final_reps,
             "form_accuracy": round(final_accuracy, 1),
             "feedback": unique_feedback,
-            "processed": True
+            "processed": True,
+            "video_url": f"/processed/{output_filename}"
         }

@@ -10,6 +10,7 @@ interface AnalysisResult {
   form_accuracy: number;
   feedback: string[];
   processed: boolean;
+  video_url?: string;
 }
 
 export const ExerciseDetection: React.FC = () => {
@@ -308,6 +309,22 @@ export const ExerciseDetection: React.FC = () => {
             </div>
           ) : result ? (
             <div className="space-y-6">
+              {result.video_url && (
+                <div className="bg-black/80 aspect-video rounded-xl border border-white/5 relative overflow-hidden flex items-center justify-center">
+                  <video
+                    src={`http://${window.location.hostname}:8001${result.video_url}`}
+                    controls
+                    className="max-h-full max-w-full rounded-xl"
+                    autoPlay
+                    muted
+                    loop
+                  />
+                  <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full flex items-center gap-1">
+                    <span className="h-2 w-2 bg-white rounded-full animate-pulse" /> Processed YOLOv8 Video
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 bg-white/5 border border-white/5 rounded-xl flex items-center gap-4">
                   <Dumbbell className="h-10 w-10 text-primary" />
