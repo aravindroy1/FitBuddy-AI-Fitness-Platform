@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: chatbot-service
-        image: bodygptacr.azurecr.io/chatbot-service:latest
+        image: acrbodygptprod.azurecr.io/chatbot-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5005
