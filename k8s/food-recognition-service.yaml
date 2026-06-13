@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: food-recognition-service
-        image: bodygptacr.azurecr.io/food-recognition-service:latest
+        image: acrbodygptprod.azurecr.io/food-recognition-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8002
