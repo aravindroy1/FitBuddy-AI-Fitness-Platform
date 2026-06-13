@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: diet-service
-        image: bodygptacr.azurecr.io/diet-service:latest
+        image: acrbodygptprod.azurecr.io/diet-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5003
