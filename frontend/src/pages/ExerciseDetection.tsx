@@ -27,6 +27,9 @@ export const ExerciseDetection: React.FC = () => {
   const [liveFeedback, setLiveFeedback] = useState<string[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -70,125 +73,251 @@ export const ExerciseDetection: React.FC = () => {
     }
   };
 
-  // Live Canvas Animation (Squat Stick-man simulation)
+  // Live Canvas Animation (Squat Stick-man simulation or Real WebSockets Webcam feed)
   useEffect(() => {
     if (!isLive) {
-      if (requestRef.current) cancelAnimationFrame(requestRef.current);
+      // Clean up stream and websocket
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+        requestRef.current = null;
+      }
       return;
     }
 
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    let active = true;
 
-    let frameCount = 0;
-    let localReps = 0;
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      frameCount++;
+    const startCameraAndWS = async () => {
+      try {
+        // Start websocket connection
+        const wsUrl = `ws://${window.location.hostname}:8001/exercise/ws-stream`;
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
 
-      // Draw dark grid background
-      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < canvas.width; i += 20) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, canvas.height);
-        ctx.stroke();
-      }
-      for (let j = 0; j < canvas.height; j += 20) {
-        ctx.beginPath();
-        ctx.moveTo(0, j);
-        ctx.lineTo(canvas.width, j);
-        ctx.stroke();
-      }
-
-      // Calculate squat height offset based on sinusoidal frame counter
-      const cycle = (frameCount % 120) / 120; // 2 seconds per rep cycle
-      const depth = Math.sin(cycle * Math.PI * 2); // -1 to +1
-      const normalizedDepth = (depth + 1) / 2; // 0 to 1
-
-      // Track reps when cycle crosses high depth
-      if (frameCount > 0 && frameCount % 120 === 60) {
-        localReps += 1;
-        setLiveReps(localReps);
-        if (Math.random() > 0.7) {
-          setLiveFeedback(prev => ["Squat depth achieved! Keep torso upright.", ...prev.slice(0, 2)]);
+        // Try getting webcam stream
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 480, height: 360, frameRate: 15 }
+        });
+        
+        if (!active) {
+          stream.getTracks().forEach(track => track.stop());
+          ws.close();
+          return;
         }
+
+        streamRef.current = stream;
+
+        // Create a hidden video element to feed the stream
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.setAttribute('playsinline', 'true');
+        video.muted = true;
+        video.play();
+        videoRef.current = video;
+
+        // Set up canvas for rendering
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        ws.onmessage = (event) => {
+          if (!active) return;
+          try {
+            const response = JSON.parse(event.data);
+            
+            // Draw processed image on canvas
+            if (response.image) {
+              const img = new Image();
+              img.onload = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              };
+              img.src = response.image;
+            }
+
+            if (response.rep_count !== undefined) {
+              setLiveReps(response.rep_count);
+            }
+            if (response.feedback) {
+              setLiveFeedback(response.feedback);
+            }
+          } catch (e) {
+            console.error("Error parsing WS frame response:", e);
+          }
+        };
+
+        // Frame sending loop
+        const sendFrame = () => {
+          if (!active || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            // Create a temporary canvas to resize and compress frame
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 320;
+            tempCanvas.height = 240;
+            const tempCtx = tempCanvas.getContext('2d');
+            if (tempCtx) {
+              tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+              const base64Img = tempCanvas.toDataURL('image/jpeg', 0.6);
+              
+              wsRef.current.send(JSON.stringify({
+                image: base64Img,
+                exercise: exercise
+              }));
+            }
+          }
+          // Cap at ~10 FPS for network reliability
+          setTimeout(sendFrame, 100);
+        };
+
+        ws.onopen = () => {
+          sendFrame();
+        };
+
+        ws.onerror = (err) => {
+          console.error("WebSocket error:", err);
+        };
+
+      } catch (err) {
+        console.warn("Webcam access blocked or unavailable. Falling back to simulation.", err);
+        // Fallback stickman simulation
+        runStickmanSimulation();
       }
+    };
 
-      // Joints coordinates
-      const headY = 80 + normalizedDepth * 50;
-      const shoulderY = 110 + normalizedDepth * 50;
-      const hipY = 180 + normalizedDepth * 40;
-      const kneeY = 240 + normalizedDepth * 10;
-      const ankleY = 300;
+    // Fallback animation loop
+    const runStickmanSimulation = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-      // Draw Stick-man skeleton
-      ctx.strokeStyle = '#6366f1';
-      ctx.lineWidth = 5;
-      ctx.lineCap = 'round';
+      let frameCount = 0;
+      let localReps = 0;
+      const animate = () => {
+        if (!active) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        frameCount++;
 
-      // Spine/Torso
-      ctx.beginPath();
-      ctx.moveTo(150, shoulderY);
-      ctx.lineTo(150, hipY);
-      ctx.stroke();
+        // Draw dark grid background
+        ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < canvas.width; i += 20) {
+          ctx.beginPath();
+          ctx.moveTo(i, 0);
+          ctx.lineTo(i, canvas.height);
+          ctx.stroke();
+        }
+        for (let j = 0; j < canvas.height; j += 20) {
+          ctx.beginPath();
+          ctx.moveTo(0, j);
+          ctx.lineTo(canvas.width, j);
+          ctx.stroke();
+        }
 
-      // Head
-      ctx.fillStyle = '#6366f1';
-      ctx.beginPath();
-      ctx.arc(150, headY, 15, 0, Math.PI * 2);
-      ctx.fill();
+        // Calculate squat height offset based on sinusoidal frame counter
+        const cycle = (frameCount % 120) / 120; // 2 seconds per rep cycle
+        const depth = Math.sin(cycle * Math.PI * 2); // -1 to +1
+        const normalizedDepth = (depth + 1) / 2; // 0 to 1
 
-      // Thighs
-      ctx.strokeStyle = '#10b981';
-      ctx.beginPath();
-      ctx.moveTo(150, hipY);
-      ctx.lineTo(110 + normalizedDepth * 10, kneeY);
-      ctx.stroke();
+        // Track reps when cycle crosses high depth
+        if (frameCount > 0 && frameCount % 120 === 60) {
+          localReps += 1;
+          setLiveReps(localReps);
+          if (Math.random() > 0.7) {
+            setLiveFeedback(prev => ["Squat depth achieved! Keep torso upright.", ...prev.slice(0, 2)]);
+          }
+        }
 
-      // Shins
-      ctx.beginPath();
-      ctx.moveTo(110 + normalizedDepth * 10, kneeY);
-      ctx.lineTo(130, ankleY);
-      ctx.stroke();
+        // Joints coordinates
+        const headY = 80 + normalizedDepth * 50;
+        const shoulderY = 110 + normalizedDepth * 50;
+        const hipY = 180 + normalizedDepth * 40;
+        const kneeY = 240 + normalizedDepth * 10;
+        const ankleY = 300;
 
-      // Arms (balanced forward during squat)
-      ctx.strokeStyle = '#6366f1';
-      ctx.beginPath();
-      ctx.moveTo(150, shoulderY);
-      ctx.lineTo(190, shoulderY - 10);
-      ctx.stroke();
+        // Draw Stick-man skeleton
+        ctx.strokeStyle = '#6366f1';
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
 
-      // Drawing keypoint dots
-      ctx.fillStyle = '#f43f5e';
-      const points = [
-        [150, headY], [150, shoulderY], [150, hipY],
-        [110 + normalizedDepth * 10, kneeY], [130, ankleY]
-      ];
-      points.forEach(([x, y]) => {
+        // Spine/Torso
         ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fill();
-      });
+        ctx.moveTo(150, shoulderY);
+        ctx.lineTo(150, hipY);
+        ctx.stroke();
 
-      // Target lines text overlay
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.4)';
-      ctx.fillRect(20, 235, 100, 2);
-      ctx.fillStyle = '#10b981';
-      ctx.font = '10px Outfit';
-      ctx.fillText("PARALLEL DEPTH", 25, 230);
+        // Head
+        ctx.fillStyle = '#6366f1';
+        ctx.beginPath();
+        ctx.arc(150, headY, 15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Thighs
+        ctx.strokeStyle = '#10b981';
+        ctx.beginPath();
+        ctx.moveTo(150, hipY);
+        ctx.lineTo(110 + normalizedDepth * 10, kneeY);
+        ctx.stroke();
+
+        // Shins
+        ctx.beginPath();
+        ctx.moveTo(110 + normalizedDepth * 10, kneeY);
+        ctx.lineTo(130, ankleY);
+        ctx.stroke();
+
+        // Arms (balanced forward during squat)
+        ctx.strokeStyle = '#6366f1';
+        ctx.beginPath();
+        ctx.moveTo(150, shoulderY);
+        ctx.lineTo(190, shoulderY - 10);
+        ctx.stroke();
+
+        // Drawing keypoint dots
+        ctx.fillStyle = '#f43f5e';
+        const points = [
+          [150, headY], [150, shoulderY], [150, hipY],
+          [110 + normalizedDepth * 10, kneeY], [130, ankleY]
+        ];
+        points.forEach(([x, y]) => {
+          ctx.beginPath();
+          ctx.arc(x, y, 6, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Target lines text overlay
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.4)';
+        ctx.fillRect(20, 235, 100, 2);
+        ctx.fillStyle = '#10b981';
+        ctx.font = '10px Outfit';
+        ctx.fillText("PARALLEL DEPTH", 25, 230);
+
+        requestRef.current = requestAnimationFrame(animate);
+      };
 
       requestRef.current = requestAnimationFrame(animate);
     };
 
-    requestRef.current = requestAnimationFrame(animate);
+    startCameraAndWS();
+
     return () => {
+      active = false;
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
     };
-  }, [isLive]);
+  }, [isLive, exercise]);
 
   return (
     <div className="space-y-6">
@@ -263,7 +392,7 @@ export const ExerciseDetection: React.FC = () => {
               }`}
             >
               <Camera className="h-4 w-4" />
-              {isLive ? 'Stop Live Camera' : 'Simulate Camera Stream'}
+              {isLive ? 'Stop Camera Feed' : 'Start Live Camera (Webcam)'}
             </button>
           </div>
         </div>
@@ -277,9 +406,9 @@ export const ExerciseDetection: React.FC = () => {
           {isLive ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-2 bg-black/80 aspect-video rounded-xl border border-white/5 relative overflow-hidden flex items-center justify-center">
-                <canvas ref={canvasRef} width={300} height={350} className="max-h-full" />
+                <canvas ref={canvasRef} width={640} height={480} className="max-h-full max-w-full rounded-xl object-contain" />
                 <div className="absolute top-4 left-4 bg-accent-rose text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full flex items-center gap-1">
-                  <span className="h-2 w-2 bg-white rounded-full animate-ping" /> Live Camera Stream
+                  <span className="h-2 w-2 bg-white rounded-full animate-ping" /> Live Camera Feed (YOLO Active)
                 </div>
               </div>
               <div className="space-y-4">
