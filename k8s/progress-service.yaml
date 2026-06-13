@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: progress-service
-        image: bodygptacr.azurecr.io/progress-service:latest
+        image: acrbodygptprod.azurecr.io/progress-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5006
