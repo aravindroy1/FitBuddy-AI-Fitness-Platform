@@ -19,7 +19,7 @@ except ImportError:
 class ServiceBusListener:
     def __init__(self):
         self.db_client = MongoClient(MONGO_URI)
-        self.db = self.db_client.get_database()
+        self.db = self.db_client.get_database("bodygpt")
         self.collection = self.db["exercise_analysis"]
         self.processor = ExerciseProcessor()
         self.running = False

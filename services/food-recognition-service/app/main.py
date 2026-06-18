@@ -24,7 +24,7 @@ sb_listener = ServiceBusListener()
 
 # Database Setup
 db_client = MongoClient(MONGO_URI)
-db = db_client.get_database()
+db = db_client.get_database("bodygpt")
 analysis_collection = db["food_analysis"]
 
 @app.on_event("startup")
