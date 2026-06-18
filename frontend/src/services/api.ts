@@ -13,8 +13,7 @@ const PORTS = {
 };
 
 const getBaseUrl = (service: keyof typeof PORTS) => {
-  const host = window.location.hostname;
-  return `http://${host}:${PORTS[service]}`;
+  return `/api/${service}`;
 };
 
 // Axios instances mapping
