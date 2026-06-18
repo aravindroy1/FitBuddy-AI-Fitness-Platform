@@ -61,6 +61,16 @@ spec:
             secretKeyRef:
               name: bodygpt-secrets
               key: JWT_REFRESH_SECRET
+        - name: SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: bodygpt-secrets
+              key: SMTP_USER
+        - name: SMTP_PASS
+          valueFrom:
+            secretKeyRef:
+              name: bodygpt-secrets
+              key: SMTP_PASS
 ---
 apiVersion: v1
 kind: Service

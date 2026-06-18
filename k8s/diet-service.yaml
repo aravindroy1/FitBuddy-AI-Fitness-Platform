@@ -56,6 +56,16 @@ spec:
             secretKeyRef:
               name: bodygpt-secrets
               key: JWT_ACCESS_SECRET
+        - name: AZURE_AI_FOUNDRY_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: bodygpt-secrets
+              key: AZURE_AI_FOUNDRY_ENDPOINT
+        - name: AZURE_OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: bodygpt-secrets
+              key: AZURE_OPENAI_API_KEY
 ---
 apiVersion: v1
 kind: Service
