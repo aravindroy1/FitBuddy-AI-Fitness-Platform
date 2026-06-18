@@ -1,5 +1,6 @@
 import { DietRepository } from '../repositories/DietRepository.js';
 import { IDiet, IMeal } from '../models/Diet.js';
+import { AzureOpenAI } from 'openai';
 import winston from 'winston';
 
 const logger = winston.createLogger({
@@ -80,13 +81,30 @@ export class DietService {
 
     // Call Azure AI Foundry (Mock/Fallback implementation)
     let meals: IMeal[] = [];
-    if (process.env.AZURE_AI_FOUNDRY_ENDPOINT) {
+    if (process.env.AZURE_AI_FOUNDRY_ENDPOINT && process.env.AZURE_OPENAI_API_KEY) {
       logger.info('Calling Azure AI Foundry to generate structured diet plan...');
-      // Real SDK call would go here
+      try {
+        const client = new AzureOpenAI({
+          endpoint: process.env.AZURE_AI_FOUNDRY_ENDPOINT,
+          apiKey: process.env.AZURE_OPENAI_API_KEY,
+          apiVersion: "2024-05-01-preview"
+        });
+        const prompt = `Generate a daily diet plan with ${targetCalories} calories, ${targetProtein}g protein, ${targetCarbs}g carbs, and ${targetFat}g fat. Return ONLY a valid JSON array where each object has 'mealName' (e.g. Breakfast), 'items' (array of strings), and 'calories' (number).`;
+        const result = await client.chat.completions.create({
+          model: 'gpt-4o',
+          messages: [{ role: 'user', content: prompt }]
+        });
+        const content = result.choices[0].message?.content || '[]';
+        const jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
+        meals = JSON.parse(jsonStr);
+      } catch (err: any) {
+        logger.error(`Error calling Azure OpenAI: ${err.message}`);
+        meals = this.generateFallbackMeals(targetCalories, targetProtein, targetCarbs, targetFat, profile.fitnessGoal);
+      }
+    } else {
+      // Default High-Fidelity Meal Generator Fallback
+      meals = this.generateFallbackMeals(targetCalories, targetProtein, targetCarbs, targetFat, profile.fitnessGoal);
     }
-
-    // Default High-Fidelity Meal Generator Fallback
-    meals = this.generateFallbackMeals(targetCalories, targetProtein, targetCarbs, targetFat, profile.fitnessGoal);
 
     return this.dietRepository.create({
       userId,
@@ -155,8 +173,25 @@ export class DietService {
     logger.info(`Getting substitutions for ${currentItem} in ${mealName}`);
     
     // Azure AI Foundry Integration
-    if (process.env.AZURE_AI_FOUNDRY_ENDPOINT) {
+    if (process.env.AZURE_AI_FOUNDRY_ENDPOINT && process.env.AZURE_OPENAI_API_KEY) {
       logger.info('Calling Azure AI Foundry for meal substitutions...');
+      try {
+        const client = new AzureOpenAI({
+          endpoint: process.env.AZURE_AI_FOUNDRY_ENDPOINT,
+          apiKey: process.env.AZURE_OPENAI_API_KEY,
+          apiVersion: "2024-05-01-preview"
+        });
+        const prompt = `Give me 3 healthy substitutions for "${currentItem}" in a "${mealName}". Return ONLY a valid JSON array of strings.`;
+        const result = await client.chat.completions.create({
+          model: 'gpt-4o',
+          messages: [{ role: 'user', content: prompt }]
+        });
+        const content = result.choices[0].message?.content || '[]';
+        const jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(jsonStr);
+      } catch (err: any) {
+        logger.error(`Error calling Azure OpenAI: ${err.message}`);
+      }
     }
 
     const substitutionsMap: Record<string, string[]> = {

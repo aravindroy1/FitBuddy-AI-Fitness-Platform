@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: workout-service
-        image: acrbodygptprod.azurecr.io/workout-service:latest
+        image: aravindroy1/fitbuddy-workout-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5004

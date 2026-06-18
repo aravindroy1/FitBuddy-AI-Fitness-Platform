@@ -116,18 +116,7 @@ class FoodProcessor:
                     total_carbs += macros["carbs"]
                     total_fat += macros["fat"]
 
-        # If YOLOv8 model runs but doesn't detect any of our specific database foods,
-        # fallback to a default healthy meal prediction to show functionality
-        if not detected_items:
-            detected_items.append({
-                "name": "Chicken Salad (Inferred)",
-                "confidence": 0.75,
-                "box": [50, 50, image.shape[1] - 50, image.shape[0] - 50]
-            })
-            total_calories = 320
-            total_protein = 28.0
-            total_carbs = 10.0
-            total_fat = 18.0
+        # Return exact detected items (empty if none found matching database)
 
         return {
             "detectedItems": detected_items,

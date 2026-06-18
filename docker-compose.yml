@@ -1,4 +1,4 @@
-version: '3.8'
+﻿version: '3.8'
 
 services:
   mongodb:
@@ -21,6 +21,8 @@ services:
       - MONGO_URI=mongodb://mongodb:27017/bodygpt
       - JWT_ACCESS_SECRET=bodygpt_access_secret_12345!
       - JWT_REFRESH_SECRET=bodygpt_refresh_secret_12345!
+      - SMTP_USER=YOUR_EMAIL
+      - SMTP_PASS=YOUR_EMAIL_PASSWORD
     depends_on:
       - mongodb
     networks:
@@ -49,6 +51,8 @@ services:
       - PORT=5003
       - MONGO_URI=mongodb://mongodb:27017/bodygpt
       - JWT_ACCESS_SECRET=bodygpt_access_secret_12345!
+      - AZURE_AI_FOUNDRY_ENDPOINT=https://cloud-ai-resource.services.ai.azure.com/
+      - AZURE_OPENAI_API_KEY=YOUR_AZURE_OPENAI_KEY
     depends_on:
       - mongodb
     networks:
@@ -63,6 +67,8 @@ services:
       - PORT=5004
       - MONGO_URI=mongodb://mongodb:27017/bodygpt
       - JWT_ACCESS_SECRET=bodygpt_access_secret_12345!
+      - AZURE_AI_FOUNDRY_ENDPOINT=https://cloud-ai-resource.services.ai.azure.com/
+      - AZURE_OPENAI_API_KEY=YOUR_AZURE_OPENAI_KEY
     depends_on:
       - mongodb
     networks:
@@ -77,6 +83,10 @@ services:
       - PORT=5005
       - MONGO_URI=mongodb://mongodb:27017/bodygpt
       - JWT_ACCESS_SECRET=bodygpt_access_secret_12345!
+      - AZURE_AI_FOUNDRY_ENDPOINT=https://cloud-ai-resource.services.ai.azure.com/
+      - AZURE_OPENAI_API_KEY=YOUR_AZURE_OPENAI_KEY
+      - AZURE_AI_SEARCH_ENDPOINT=https://fitbuddy-search-xyz.search.windows.net
+      - AZURE_AI_SEARCH_KEY=YOUR_AI_SEARCH_KEY
     depends_on:
       - mongodb
     networks:

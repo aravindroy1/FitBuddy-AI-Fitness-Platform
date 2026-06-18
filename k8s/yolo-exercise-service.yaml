@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: yolo-exercise-service
-        image: acrbodygptprod.azurecr.io/yolo-exercise-service:latest
+        image: aravindroy1/fitbuddy-yolo-exercise-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8001

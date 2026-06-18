@@ -1,5 +1,7 @@
 import { ChatRepository } from '../repositories/ChatRepository.js';
 import { IChatMessage } from '../models/ChatHistory.js';
+import { AzureOpenAI } from 'openai';
+import { SearchClient, AzureKeyCredential } from '@azure/search-documents';
 import winston from 'winston';
 
 const logger = winston.createLogger({
@@ -55,18 +57,53 @@ export class ChatService {
 
     // 2. Search knowledge base (RAG mock via Azure AI Search)
     let context = '';
-    if (process.env.AZURE_AI_SEARCH_ENDPOINT) {
+    if (process.env.AZURE_AI_SEARCH_ENDPOINT && process.env.AZURE_AI_SEARCH_KEY) {
       logger.info('Performing semantic search query on Azure AI Search index...');
-      // Real SDK call would go here
+      try {
+        const searchClient = new SearchClient(
+          process.env.AZURE_AI_SEARCH_ENDPOINT,
+          'fitness-knowledge-base',
+          new AzureKeyCredential(process.env.AZURE_AI_SEARCH_KEY)
+        );
+        const searchResults = await searchClient.search(userMessage, { top: 3 });
+        const docs = [];
+        for await (const result of searchResults.results) {
+          const doc = result.document as any;
+          if (doc.title && doc.content) {
+            docs.push(`Title: ${doc.title}\nContent: ${doc.content}`);
+          }
+        }
+        context = docs.join('\n\n');
+      } catch (err: any) {
+        logger.error(`Azure Search error: ${err.message}. Falling back to local KB.`);
+        context = this.searchLocalKnowledgeBase(userMessage);
+      }
     } else {
       context = this.searchLocalKnowledgeBase(userMessage);
     }
 
     // 3. Request completion (Azure AI Foundry chat completion mock)
     let reply = '';
-    if (process.env.AZURE_AI_FOUNDRY_ENDPOINT) {
+    if (process.env.AZURE_AI_FOUNDRY_ENDPOINT && process.env.AZURE_OPENAI_API_KEY) {
       logger.info('Requesting completion from Azure AI Foundry model endpoint...');
-      // Real LLM call with context + system prompt + history goes here
+      try {
+        const client = new AzureOpenAI({
+          endpoint: process.env.AZURE_AI_FOUNDRY_ENDPOINT,
+          apiKey: process.env.AZURE_OPENAI_API_KEY,
+          apiVersion: "2024-05-01-preview"
+        });
+        const result = await client.chat.completions.create({
+          model: 'gpt-4o',
+          messages: [
+            { role: 'system', content: `You are an expert fitness coach AI. Use this context if helpful to answer the user's question: ${context}` },
+            { role: 'user', content: userMessage }
+          ]
+        });
+        reply = result.choices[0].message?.content || 'Sorry, I could not generate a response.';
+      } catch (err: any) {
+        logger.error(`Error calling Azure OpenAI: ${err.message}`);
+        reply = this.generateFallbackCoachReply(userMessage, context);
+      }
     } else {
       reply = this.generateFallbackCoachReply(userMessage, context);
     }

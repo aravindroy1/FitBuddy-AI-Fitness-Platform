@@ -10,11 +10,14 @@
     "dev": "ts-node-dev --respawn --transpile-only --esm src/index.ts"
   },
   "dependencies": {
+    "@azure/core-auth": "^1.10.1",
+    "@azure/search-documents": "^13.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.3.1",
+    "openai": "^6.44.0",
     "winston": "^3.13.0"
   },
   "devDependencies": {

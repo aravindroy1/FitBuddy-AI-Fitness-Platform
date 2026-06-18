@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: chatbot-service
-        image: acrbodygptprod.azurecr.io/chatbot-service:latest
+        image: aravindroy1/fitbuddy-chatbot-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5005

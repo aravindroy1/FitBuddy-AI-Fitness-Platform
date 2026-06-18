@@ -15,6 +15,7 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.3.1",
+    "openai": "^6.44.0",
     "winston": "^3.13.0"
   },
   "devDependencies": {

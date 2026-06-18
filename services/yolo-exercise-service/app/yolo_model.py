@@ -146,7 +146,7 @@ class ExerciseProcessor:
             out.release()
             
             # Calculate final stats
-            final_reps = rep_count if rep_count > 0 else 10 # Default mock backup if no movement matched
+            final_reps = rep_count
             final_accuracy = float(np.mean(form_accuracy_scores)) if len(form_accuracy_scores) > 0 else 90.0
             unique_feedback = list(set(feedback))
             if not unique_feedback:

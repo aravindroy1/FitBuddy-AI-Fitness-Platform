@@ -1,5 +1,6 @@
 import { WorkoutRepository } from '../repositories/WorkoutRepository.js';
 import { IWorkout, IExercise } from '../models/Workout.js';
+import { AzureOpenAI } from 'openai';
 import winston from 'winston';
 
 const logger = winston.createLogger({
@@ -22,15 +23,34 @@ export class WorkoutService {
   ): Promise<IWorkout> {
     logger.info(`Generating ${type} workout plan for user ${userId} with goal ${goal}`);
 
-    // Call Azure AI Foundry (Mock/Fallback implementation)
-    if (process.env.AZURE_AI_FOUNDRY_ENDPOINT) {
-      logger.info('Calling Azure AI Foundry to generate structured workout plan...');
-    }
-
     let split = 'Push / Pull / Legs';
     let exercises: IExercise[] = [];
 
-    if (type === 'gym') {
+    if (process.env.AZURE_AI_FOUNDRY_ENDPOINT && process.env.AZURE_OPENAI_API_KEY) {
+      logger.info('Calling Azure AI Foundry to generate structured workout plan...');
+      try {
+        const client = new AzureOpenAI({
+          endpoint: process.env.AZURE_AI_FOUNDRY_ENDPOINT,
+          apiKey: process.env.AZURE_OPENAI_API_KEY,
+          apiVersion: "2024-05-01-preview"
+        });
+        const prompt = `Generate a personalized ${type} workout plan for the goal: ${goal}. Return ONLY a valid JSON object with two fields: 'split' (string, name of the split) and 'exercises' (array of objects, where each object has name, sets (number), reps (string), weight (string), restSeconds (number), and targetMuscle (string)).`;
+        const result = await client.chat.completions.create({
+          model: 'gpt-4o',
+          messages: [{ role: 'user', content: prompt }]
+        });
+        const content = result.choices[0].message?.content || '{}';
+        const jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(jsonStr);
+        split = parsed.split || split;
+        exercises = parsed.exercises || [];
+      } catch (err: any) {
+        logger.error(`Error calling Azure OpenAI: ${err.message}`);
+      }
+    }
+
+    if (exercises.length === 0) {
+      if (type === 'gym') {
       if (goal === 'muscle_gain' || goal === 'weight_gain') {
         split = 'Hypertrophy Push / Pull / Legs';
         exercises = [
@@ -71,6 +91,7 @@ export class WorkoutService {
           { name: 'Push-Ups', sets: 3, reps: '45 seconds', restSeconds: 15, targetMuscle: 'Chest' },
           { name: 'Plank Hold', sets: 3, reps: '60 seconds', restSeconds: 30, targetMuscle: 'Core' }
         ];
+      }
       }
     }
 

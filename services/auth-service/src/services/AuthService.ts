@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import winston from 'winston';
+import nodemailer from 'nodemailer';
 import { UserRepository } from '../repositories/UserRepository.js';
 import { IUser } from '../models/User.js';
 
@@ -17,6 +18,14 @@ const REFRESH_TOKEN_EXPIRY = '7d';
 
 export class AuthService {
   private userRepository = new UserRepository();
+
+  private transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
 
   private generateAccessToken(userId: string, email: string): string {
     return jwt.sign({ userId, email }, JWT_ACCESS_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY as jwt.SignOptions['expiresIn'] });
@@ -48,8 +57,18 @@ export class AuthService {
       otpExpires
     });
 
-    // Azure Communication Services Mock
-    logger.info(`[Azure ACS Mock] Sent OTP ${otp} to ${email}`);
+    // Send Real OTP Email
+    try {
+      await this.transporter.sendMail({
+        from: `"FitBuddy Auth" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: 'FitBuddy - Registration OTP',
+        text: `Your OTP for registration is: ${otp}. It will expire in 10 minutes.`,
+      });
+      logger.info(`Sent OTP to ${email}`);
+    } catch (err: any) {
+      logger.error(`Failed to send OTP to ${email}: ${err.message}`);
+    }
 
     return {
       userId: user._id,
@@ -123,8 +142,18 @@ export class AuthService {
     const userIdStr = (user._id as any).toString();
     await this.userRepository.update(userIdStr, { otp, otpExpires });
 
-    // Azure Communication Services Mock
-    logger.info(`[Azure ACS Mock] Reset Password OTP ${otp} sent to ${email}`);
+    // Send Real OTP Email
+    try {
+      await this.transporter.sendMail({
+        from: `"FitBuddy Auth" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: 'FitBuddy - Reset Password OTP',
+        text: `Your OTP for resetting your password is: ${otp}. It will expire in 10 minutes.`,
+      });
+      logger.info(`Reset Password OTP sent to ${email}`);
+    } catch (err: any) {
+      logger.error(`Failed to send Reset Password OTP to ${email}: ${err.message}`);
+    }
 
     return { message: 'OTP sent to registered email' };
   }

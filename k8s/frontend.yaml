@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: acrbodygptprod.azurecr.io/frontend:latest
+        image: aravindroy1/fitbuddy-frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
