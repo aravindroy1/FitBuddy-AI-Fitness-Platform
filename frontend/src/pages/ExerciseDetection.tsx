@@ -19,7 +19,24 @@ export const ExerciseDetection: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState('');
-  
+
+  // Fetch history on mount
+  useEffect(() => {
+    const fetchHistory = async () => {
+      const userId = localStorage.getItem('userId');
+      if (!userId) return;
+      try {
+        const res = await api.exercise.getHistory(userId);
+        if (res.data && res.data.length > 0) {
+          setResult(res.data[0]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch exercise history");
+      }
+    };
+    fetchHistory();
+  }, []);
+
   // Live simulation states
   const [isLive, setIsLive] = useState(false);
   const [liveReps, setLiveReps] = useState(0);
@@ -187,8 +204,7 @@ export const ExerciseDetection: React.FC = () => {
 
       } catch (err) {
         console.warn("Webcam access blocked or unavailable. Falling back to simulation.", err);
-        // Fallback stickman simulation
-        runStickmanSimulation();
+        setError("Browser blocked webcam access. Browsers require HTTPS or localhost for cameras. To fix this: Type chrome://flags/#unsafely-treat-insecure-origin-as-secure in Chrome, add this IP address, enable it, and restart Chrome.");
       }
     };
 
