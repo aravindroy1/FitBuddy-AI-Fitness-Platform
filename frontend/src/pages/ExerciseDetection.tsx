@@ -114,7 +114,8 @@ export const ExerciseDetection: React.FC = () => {
     const startCameraAndWS = async () => {
       try {
         // Start websocket connection
-        const wsUrl = `ws://${window.location.host}/api/exercise/ws-stream`;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/api/exercise/exercise/ws-stream`;
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
