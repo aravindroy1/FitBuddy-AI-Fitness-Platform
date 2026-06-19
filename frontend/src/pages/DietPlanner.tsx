@@ -41,14 +41,7 @@ export const DietPlanner: React.FC = () => {
       const profileRes = await api.profile.get();
       setProfile(profileRes.data);
     } catch (err) {
-      setProfile({
-        height: 178,
-        weight: 80,
-        age: 27,
-        gender: 'male',
-        activityLevel: 'moderately_active',
-        fitnessGoal: 'weight_loss'
-      });
+      console.error("Failed to load profile", err);
     }
   };
 

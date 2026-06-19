@@ -41,7 +41,7 @@ export const WorkoutPlanner: React.FC = () => {
       const profileRes = await api.profile.get();
       setProfile(profileRes.data);
     } catch (err) {
-      setProfile({ fitnessGoal: 'muscle_gain' });
+      console.error("Failed to load profile", err);
     }
   };
 
