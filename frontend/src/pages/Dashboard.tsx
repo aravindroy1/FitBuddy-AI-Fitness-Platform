@@ -127,7 +127,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Onboarding Profile Warning Banner */}
-      {isMockProfile && (
+      {!profile && (
         <div className="p-4 bg-primary/10 border border-white/5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-primary/20 rounded-xl text-primary">
