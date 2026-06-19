@@ -17,7 +17,6 @@ interface ProgressRecord {
 
 export const Dashboard: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
-  const [isMockProfile, setIsMockProfile] = useState(false);
   const [progress, setProgress] = useState<ProgressRecord[]>([]);
   const [diet, setDiet] = useState<any>(null);
   const [workout, setWorkout] = useState<any>(null);
