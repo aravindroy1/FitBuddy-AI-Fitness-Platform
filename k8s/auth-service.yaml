@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: auth-service
-        image: aravindroy1/fitbuddy-auth-service:latest
+        image: aravindacr.azurecr.io/fitbuddy-auth-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5001

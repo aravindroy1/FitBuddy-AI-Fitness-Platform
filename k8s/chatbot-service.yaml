@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: chatbot-service
-        image: aravindroy1/fitbuddy-chatbot-service:latest
+        image: aravindacr.azurecr.io/fitbuddy-chatbot-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5005
