@@ -89,14 +89,22 @@ export class DietService {
           apiKey: process.env.AZURE_OPENAI_API_KEY,
           apiVersion: "2024-05-01-preview"
         });
-        const prompt = `Generate a daily diet plan with ${targetCalories} calories, ${targetProtein}g protein, ${targetCarbs}g carbs, and ${targetFat}g fat. Return ONLY a valid JSON array where each object has 'mealName' (e.g. Breakfast), 'items' (array of strings), and 'calories' (number).`;
+        const prompt = `Generate a daily diet plan with ${targetCalories} calories, ${targetProtein}g protein, ${targetCarbs}g carbs, and ${targetFat}g fat. Return ONLY a valid JSON array where each object has 'name' (e.g. Breakfast), 'foodItems' (array of strings), 'calories' (number), 'protein' (number), 'carbs' (number), and 'fat' (number).`;
         const result = await client.chat.completions.create({
           model: 'gpt-4o',
           messages: [{ role: 'user', content: prompt }]
         });
         const content = result.choices[0].message?.content || '[]';
         const jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
-        meals = JSON.parse(jsonStr);
+        const parsedMeals = JSON.parse(jsonStr);
+        meals = parsedMeals.map((meal: any) => ({
+          name: meal.name || meal.mealName || 'Meal',
+          foodItems: meal.foodItems || meal.items || [],
+          calories: meal.calories || 0,
+          protein: meal.protein || 0,
+          carbs: meal.carbs || 0,
+          fat: meal.fat || 0
+        }));
       } catch (err: any) {
         logger.error(`Error calling Azure OpenAI: ${err.message}`);
         meals = this.generateFallbackMeals(targetCalories, targetProtein, targetCarbs, targetFat, profile.fitnessGoal);

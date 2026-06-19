@@ -28,60 +28,33 @@ export const Dashboard: React.FC = () => {
   const loadData = async () => {
     try {
       const profileRes = await api.profile.get();
-      setProfile(profileRes.data);
-      setLogHeight(profileRes.data.height.toString());
-      setIsMockProfile(false);
+      if (profileRes.data) {
+        setProfile(profileRes.data);
+        setLogHeight(profileRes.data.height.toString());
+      }
     } catch (err) {
-      // Setup Mock Profile for Premium View
-      setProfile({
-        height: 180,
-        weight: 85,
-        activityLevel: 'moderately_active',
-        fitnessGoal: 'weight_loss',
-        age: 26,
-        gender: 'male'
-      });
-      setLogHeight('180');
-      setIsMockProfile(true);
+      setProfile(null);
     }
 
     try {
       const progressRes = await api.progress.getHistory();
-      setProgress(progressRes.data);
+      setProgress(progressRes.data || []);
     } catch (err) {
-      // Setup Mock Progress History
-      setProgress([
-        { weight: 89, bmi: 27.5, createdAt: '2026-05-15T00:00:00Z' },
-        { weight: 88, bmi: 27.2, createdAt: '2026-05-22T00:00:00Z' },
-        { weight: 86.5, bmi: 26.7, createdAt: '2026-06-01T00:00:00Z' },
-        { weight: 85, bmi: 26.2, createdAt: '2026-06-12T00:00:00Z' }
-      ]);
+      setProgress([]);
     }
 
     try {
       const dietRes = await api.diet.getLatest();
       setDiet(dietRes.data);
     } catch (err) {
-      setDiet({
-        calories: 2200,
-        protein: 165,
-        carbs: 220,
-        fat: 73
-      });
+      setDiet(null);
     }
 
     try {
       const workoutRes = await api.workout.getLatest();
       setWorkout(workoutRes.data);
     } catch (err) {
-      setWorkout({
-        split: 'Push / Pull / Legs',
-        exercises: [
-          { name: 'Incline Bench Press', sets: 4, reps: '10' },
-          { name: 'Pull-Ups', sets: 4, reps: '12' },
-          { name: 'Barbell Squats', sets: 4, reps: '8' }
-        ]
-      });
+      setWorkout(null);
     }
   };
 

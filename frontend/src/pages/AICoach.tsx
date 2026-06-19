@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { api } from '../services/api.js';
 import {
   Bot, Send, Trash2
@@ -141,7 +142,13 @@ export const AICoach: React.FC = () => {
                   : 'bg-card/90 border-white/5 text-slate-200'
               }`}
             >
-              {msg.message}
+              {msg.role === 'user' ? (
+                msg.message
+              ) : (
+                <div className="prose prose-invert max-w-none">
+                  <ReactMarkdown>{msg.message}</ReactMarkdown>
+                </div>
+              )}
             </div>
           </div>
         ))}

@@ -34,7 +34,8 @@ export class WorkoutService {
           apiKey: process.env.AZURE_OPENAI_API_KEY,
           apiVersion: "2024-05-01-preview"
         });
-        const prompt = `Generate a personalized ${type} workout plan for the goal: ${goal}. Return ONLY a valid JSON object with two fields: 'split' (string, name of the split) and 'exercises' (array of objects, where each object has name, sets (number), reps (string), weight (string), restSeconds (number), and targetMuscle (string)).`;
+        const equipmentRule = type === 'home' ? 'Use ONLY bodyweight exercises. NO equipment like dumbbells, barbells, or machines allowed.' : 'Use standard gym equipment.';
+        const prompt = `Generate a personalized ${type} workout plan for the goal: ${goal}. ${equipmentRule} Return ONLY a valid JSON object with two fields: 'split' (string, name of the split) and 'exercises' (array of objects, where each object has name, sets (number), reps (string), weight (string), restSeconds (number), and targetMuscle (string)).`;
         const result = await client.chat.completions.create({
           model: 'gpt-4o',
           messages: [{ role: 'user', content: prompt }]

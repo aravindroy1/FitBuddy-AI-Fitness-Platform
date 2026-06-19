@@ -13,71 +13,72 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Log in to Docker Hub
+      - name: Log in to Azure Container Registry
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
 
       - name: Build and Push Auth Service
         uses: docker/build-push-action@v4
         with:
           context: ./services/auth-service
           push: true
-          tags: aravindroy1/fitbuddy-auth-service:latest
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-auth-service:latest
 
       - name: Build and Push Chatbot Service
         uses: docker/build-push-action@v4
         with:
           context: ./services/chatbot-service
           push: true
-          tags: aravindroy1/fitbuddy-chatbot-service:latest
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-chatbot-service:latest
 
       - name: Build and Push Diet Service
         uses: docker/build-push-action@v4
         with:
           context: ./services/diet-service
           push: true
-          tags: aravindroy1/fitbuddy-diet-service:latest
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-diet-service:latest
 
       - name: Build and Push Progress Service
         uses: docker/build-push-action@v4
         with:
           context: ./services/progress-service
           push: true
-          tags: aravindroy1/fitbuddy-progress-service:latest
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-progress-service:latest
 
       - name: Build and Push User Service
         uses: docker/build-push-action@v4
         with:
           context: ./services/user-service
           push: true
-          tags: aravindroy1/fitbuddy-user-service:latest
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-user-service:latest
 
       - name: Build and Push Workout Service
         uses: docker/build-push-action@v4
         with:
           context: ./services/workout-service
           push: true
-          tags: aravindroy1/fitbuddy-workout-service:latest
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-workout-service:latest
 
       - name: Build and Push Food Recognition Service
         uses: docker/build-push-action@v4
         with:
           context: ./services/food-recognition-service
           push: true
-          tags: aravindroy1/fitbuddy-food-recognition-service:latest
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-food-recognition-service:latest
 
       - name: Build and Push YOLO Exercise Service
         uses: docker/build-push-action@v4
         with:
           context: ./services/yolo-exercise-service
           push: true
-          tags: aravindroy1/fitbuddy-yolo-exercise-service:latest
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-yolo-exercise-service:latest
 
       - name: Build and Push Frontend
         uses: docker/build-push-action@v4
         with:
           context: ./frontend
           push: true
-          tags: aravindroy1/fitbuddy-frontend:latest
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-frontend:latest
