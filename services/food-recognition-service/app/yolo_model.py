@@ -42,46 +42,9 @@ class FoodProcessor:
         Processes a food image.
         Detects food classes, aggregates total macros, and returns bounding boxes.
         """
-        # Fallback Mock Mode
         if not self.model:
-            logger.info("Running mock image process...")
-            filename = os.path.basename(image_path).lower()
-            
-            # Predict based on file keyword
-            if "pizza" in filename:
-                detected_items = [{"name": "Pizza", "confidence": 0.92, "box": [50, 50, 400, 400]}]
-                total_calories = 532
-                total_protein = 22.0
-                total_carbs = 60.0
-                total_fat = 20.0
-            elif "banana" in filename or "fruit" in filename:
-                detected_items = [
-                    {"name": "Banana", "confidence": 0.88, "box": [30, 40, 150, 300]},
-                    {"name": "Apple", "confidence": 0.91, "box": [180, 200, 300, 300]}
-                ]
-                total_calories = 200
-                total_protein = 1.8
-                total_carbs = 52.0
-                total_fat = 0.6
-            else:
-                # Premium Salad Plate default mock
-                detected_items = [
-                    {"name": "Sandwich", "confidence": 0.95, "box": [10, 10, 300, 300]},
-                    {"name": "Broccoli", "confidence": 0.85, "box": [280, 50, 350, 150]}
-                ]
-                total_calories = 381
-                total_protein = 17.5
-                total_carbs = 46.0
-                total_fat = 12.4
-
-            return {
-                "detectedItems": detected_items,
-                "calories": total_calories,
-                "protein": total_protein,
-                "carbs": total_carbs,
-                "fat": total_fat,
-                "processed": True
-            }
+            logger.error("YOLO model is not available. Cannot process image.")
+            return {"error": "YOLO model failed to initialize on the backend.", "processed": False}
 
         image = cv2.imread(image_path)
         if image is None:

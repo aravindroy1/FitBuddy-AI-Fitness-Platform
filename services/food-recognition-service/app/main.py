@@ -22,8 +22,10 @@ app.add_middleware(
 processor = FoodProcessor()
 sb_listener = ServiceBusListener()
 
+import certifi
+
 # Database Setup
-db_client = MongoClient(MONGO_URI)
+db_client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
 db = db_client.get_database("bodygpt")
 analysis_collection = db["food_analysis"]
 

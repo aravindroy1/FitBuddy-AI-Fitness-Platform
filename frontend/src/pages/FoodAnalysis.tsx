@@ -62,44 +62,7 @@ export const FoodAnalysis: React.FC = () => {
       }
       setResult(res.data);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to analyze food image. Loaded simulated records.');
-      
-      // Fallback details based on filename keyword
-      const name = selectedFile.name.toLowerCase();
-      if (name.includes('pizza')) {
-        setResult({
-          detectedItems: [{ name: 'Pizza', confidence: 0.95, box: [40, 40, 240, 240] }],
-          calories: 532,
-          protein: 22,
-          carbs: 60,
-          fat: 20,
-          processed: true
-        });
-      } else if (name.includes('banana') || name.includes('apple') || name.includes('fruit')) {
-        setResult({
-          detectedItems: [
-            { name: 'Banana', confidence: 0.89, box: [20, 30, 150, 180] },
-            { name: 'Apple', confidence: 0.92, box: [180, 80, 280, 220] }
-          ],
-          calories: 200,
-          protein: 1.8,
-          carbs: 52,
-          fat: 0.6,
-          processed: true
-        });
-      } else {
-        setResult({
-          detectedItems: [
-            { name: 'Sandwich', confidence: 0.96, box: [30, 20, 260, 220] },
-            { name: 'Broccoli', confidence: 0.85, box: [200, 180, 290, 280] }
-          ],
-          calories: 381,
-          protein: 17.5,
-          carbs: 46,
-          fat: 12.4,
-          processed: true
-        });
-      }
+      setError(err.response?.data?.error || 'Failed to analyze food image. Please ensure the backend is running.');
     } finally {
       setLoading(false);
     }

@@ -33,8 +33,10 @@ app.mount("/processed", StaticFiles(directory="static"), name="static")
 processor = ExerciseProcessor()
 sb_listener = ServiceBusListener()
 
+import certifi
+
 # Database Setup
-db_client = MongoClient(MONGO_URI)
+db_client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
 db = db_client.get_database("bodygpt")
 analysis_collection = db["exercise_analysis"]
 
