@@ -5,9 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 import time
 
-from app.config import MONGO_URI, PORT
+from app.config import MONGO_URI, PORT, AZURE_STORAGE_CONNECTION_STRING, BLOB_CONTAINER
 from app.yolo_model import FoodProcessor
 from app.servicebus_listener import ServiceBusListener
+from app.blob_service import BlobUploader
 
 app = FastAPI(title="BodyGPT Food Recognition Service", version="1.0.0")
 
@@ -21,6 +22,7 @@ app.add_middleware(
 
 processor = FoodProcessor()
 sb_listener = ServiceBusListener()
+blob_uploader = BlobUploader(AZURE_STORAGE_CONNECTION_STRING)
 
 import certifi
 
@@ -59,7 +61,10 @@ async def analyze_food(
     # Save temporary file locally
     temp_dir = "temp_images"
     os.makedirs(temp_dir, exist_ok=True)
-    file_path = os.path.join(temp_dir, file.filename)
+    
+    # Generate unique filename to avoid blob collisions
+    unique_filename = f"{userId}_{int(time.time())}_{file.filename}"
+    file_path = os.path.join(temp_dir, unique_filename)
     
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
@@ -69,6 +74,11 @@ async def analyze_food(
     result["userId"] = userId
     result["imageUrl"] = file.filename
     result["timestamp"] = time.time()
+    
+    # Upload to Azure Blob Storage
+    blob_url = blob_uploader.upload_file(file_path, unique_filename, BLOB_CONTAINER)
+    if blob_url:
+        result["blobUrl"] = blob_url
 
     # Save to Database
     inserted = analysis_collection.insert_one(result)
