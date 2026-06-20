@@ -11,6 +11,8 @@ interface AnalysisResult {
   feedback: string[];
   processed: boolean;
   video_url?: string;
+  videoUrl?: string;
+  blobUrl?: string;
 }
 
 export const ExerciseDetection: React.FC = () => {
@@ -380,10 +382,10 @@ export const ExerciseDetection: React.FC = () => {
             </div>
           ) : result ? (
             <div className="space-y-6">
-              {result.video_url && (
+              {(result.blobUrl || result.video_url || result.videoUrl) && (
                 <div className="bg-black/80 aspect-video rounded-xl border border-white/5 relative overflow-hidden flex items-center justify-center">
                   <video
-                    src={`http://${window.location.host}/api/exercise${result.video_url}`}
+                    src={result.blobUrl || `http://${window.location.host}/api/exercise${result.video_url || result.videoUrl}`}
                     controls
                     className="max-h-full max-w-full rounded-xl"
                     autoPlay

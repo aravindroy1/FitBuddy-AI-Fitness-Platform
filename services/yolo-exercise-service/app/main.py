@@ -99,6 +99,22 @@ async def analyze_video(
     inserted = analysis_collection.insert_one(result)
     result["_id"] = str(inserted.inserted_id)
 
+    # Retention Logic: Keep only the latest 2 videos
+    cursor = analysis_collection.find({"userId": userId})
+    history = list(cursor)
+    history.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
+    
+    if len(history) > 2:
+        for old_doc in history[2:]:
+            # Delete from Blob Storage
+            old_blob_url = old_doc.get("blobUrl")
+            if old_blob_url and "/" in old_blob_url:
+                old_blob_name_with_sas = old_blob_url.split("/")[-1]
+                old_blob_name = old_blob_name_with_sas.split("?")[0]
+                blob_uploader.delete_blob(BLOB_CONTAINER, old_blob_name)
+            # Delete from DB
+            analysis_collection.delete_one({"_id": old_doc["_id"]})
+
     # Clean up temp file in background
     background_tasks.add_task(os.remove, file_path)
 
@@ -153,7 +169,8 @@ async def upload_live_session(
             # Delete from Blob Storage
             old_blob_url = old_doc.get("blobUrl")
             if old_blob_url and "/" in old_blob_url:
-                old_blob_name = old_blob_url.split("/")[-1]
+                old_blob_name_with_sas = old_blob_url.split("/")[-1]
+                old_blob_name = old_blob_name_with_sas.split("?")[0]
                 blob_uploader.delete_blob(BLOB_CONTAINER, old_blob_name)
             # Delete from DB
             analysis_collection.delete_one({"_id": old_doc["_id"]})
