@@ -6,7 +6,6 @@ import {
   Dumbbell,
   Bot,
   Video,
-  Camera,
   FileText,
   Settings
 } from 'lucide-react';

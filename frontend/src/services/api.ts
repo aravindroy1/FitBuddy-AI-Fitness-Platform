@@ -40,7 +40,6 @@ const workoutApi = createInstance('workout');
 const chatApi = createInstance('chat');
 const progressApi = createInstance('progress');
 const exerciseApi = createInstance('exercise');
-const foodApi = createInstance('food');
 
 export const api = {
   auth: {
@@ -84,7 +83,6 @@ export const api = {
       return exerciseApi.post('/analyze-video', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-    }
     },
     uploadLiveSession: (userId: string, exercise: string, file: File, repCount: number, formAccuracy: number, feedback: string) => {
       const formData = new FormData();
