@@ -86,7 +86,26 @@ export const Dashboard: React.FC = () => {
   };
 
   const currentWeight = progress.length > 0 ? progress[progress.length - 1].weight : profile?.weight || 0;
-  const currentBmi = progress.length > 0 ? progress[progress.length - 1].bmi : 0;
+  
+  // Calculate BMI properly from profile if progress is empty
+  let currentBmi = 0;
+  if (progress.length > 0) {
+    currentBmi = progress[progress.length - 1].bmi;
+  } else if (profile?.weight && profile?.height) {
+    currentBmi = Number((profile.weight / ((profile.height / 100) ** 2)).toFixed(1));
+  }
+
+  // Calculate weight difference
+  let weightDiffText = '';
+  let isWeightDown = false;
+  if (progress.length > 1) {
+    const firstWeight = progress[0].weight;
+    const diff = currentWeight - firstWeight;
+    isWeightDown = diff < 0;
+    weightDiffText = `${diff > 0 ? '+' : ''}${diff.toFixed(1)} kg overall`;
+  } else {
+    weightDiffText = 'Logging started';
+  }
 
   const chartData = progress.map(p => ({
     name: new Date(p.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
@@ -101,6 +120,7 @@ export const Dashboard: React.FC = () => {
   ] : [];
 
   const getBmiCategory = (bmi: number) => {
+    if (bmi === 0) return { label: 'Unknown', color: 'text-slate-500' };
     if (bmi < 18.5) return { label: 'Underweight', color: 'text-accent-cyan' };
     if (bmi < 25) return { label: 'Healthy Weight', color: 'text-secondary' };
     if (bmi < 30) return { label: 'Overweight', color: 'text-yellow-500' };
@@ -157,7 +177,7 @@ export const Dashboard: React.FC = () => {
             <p className="text-xs text-slate-400 font-semibold uppercase">Current Weight</p>
             <h3 className="text-2xl font-bold text-white mt-0.5">{currentWeight} kg</h3>
             <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
-              <TrendingDown className="h-3 w-3 text-secondary" /> -4.0 kg overall
+              {isWeightDown ? <TrendingDown className="h-3 w-3 text-secondary" /> : null} {weightDiffText}
             </p>
           </div>
         </div>
@@ -168,7 +188,7 @@ export const Dashboard: React.FC = () => {
           </div>
           <div>
             <p className="text-xs text-slate-400 font-semibold uppercase">Current BMI</p>
-            <h3 className="text-2xl font-bold text-white mt-0.5">{currentBmi}</h3>
+            <h3 className="text-2xl font-bold text-white mt-0.5">{currentBmi || '--'}</h3>
             <p className={`text-xs ${bmiCat.color} font-semibold flex items-center gap-1 mt-1`}>
               {bmiCat.label}
             </p>
@@ -181,8 +201,10 @@ export const Dashboard: React.FC = () => {
           </div>
           <div>
             <p className="text-xs text-slate-400 font-semibold uppercase">Calorie Budget</p>
-            <h3 className="text-2xl font-bold text-white mt-0.5">{diet?.calories || 0} kcal</h3>
-            <p className="text-xs text-slate-500 mt-1">P: {diet?.protein}g | C: {diet?.carbs}g | F: {diet?.fat}g</p>
+            <h3 className="text-2xl font-bold text-white mt-0.5">{diet ? `${diet.calories} kcal` : 'Not Set'}</h3>
+            <p className="text-xs text-slate-500 mt-1">
+              {diet ? `P: ${diet.protein}g | C: ${diet.carbs}g | F: ${diet.fat}g` : 'Generate plan first'}
+            </p>
           </div>
         </div>
 
@@ -192,8 +214,12 @@ export const Dashboard: React.FC = () => {
           </div>
           <div>
             <p className="text-xs text-slate-400 font-semibold uppercase">Workout Split</p>
-            <h3 className="text-2xl font-bold text-white mt-0.5">{workout?.split.split(' ')[0]}</h3>
-            <p className="text-xs text-slate-500 mt-1">{workout?.exercises.length} Exercises total</p>
+            <h3 className="text-2xl font-bold text-white mt-0.5" style={{ fontSize: workout?.split ? '1.25rem' : '1.5rem' }}>
+              {workout ? workout.split : 'Not Set'}
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">
+              {workout ? `${workout.exercises.length} Exercises total` : 'Generate plan first'}
+            </p>
           </div>
         </div>
       </div>

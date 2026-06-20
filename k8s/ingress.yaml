@@ -6,12 +6,13 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
   - http:
       paths:
       # Auth Service APIs routing
-      - path: /api/auth
+      - path: /api/auth(/|$)(.*)
         pathType: Prefix
         backend:
           service:
@@ -20,7 +21,7 @@ spec:
               number: 5001
       
       # User Profile APIs routing
-      - path: /api/user
+      - path: /api/user(/|$)(.*)
         pathType: Prefix
         backend:
           service:
@@ -29,7 +30,7 @@ spec:
               number: 5002
 
       # Diet Planner APIs routing
-      - path: /api/diet
+      - path: /api/diet(/|$)(.*)
         pathType: Prefix
         backend:
           service:
@@ -38,7 +39,7 @@ spec:
               number: 5003
 
       # Workout Planner APIs routing
-      - path: /api/workout
+      - path: /api/workout(/|$)(.*)
         pathType: Prefix
         backend:
           service:
@@ -47,7 +48,7 @@ spec:
               number: 5004
 
       # AI Coach Chatbot APIs routing
-      - path: /api/chat
+      - path: /api/chat(/|$)(.*)
         pathType: Prefix
         backend:
           service:
@@ -56,7 +57,7 @@ spec:
               number: 5005
 
       # Progress tracking APIs routing
-      - path: /api/progress
+      - path: /api/progress(/|$)(.*)
         pathType: Prefix
         backend:
           service:
@@ -65,7 +66,7 @@ spec:
               number: 5006
 
       # YOLO Exercise CV routing
-      - path: /api/exercise
+      - path: /api/exercise(/|$)(.*)
         pathType: Prefix
         backend:
           service:
@@ -74,7 +75,7 @@ spec:
               number: 8001
 
       # React Web App Frontend assets fallback routing
-      - path: /
+      - path: /()(.*)
         pathType: Prefix
         backend:
           service:
