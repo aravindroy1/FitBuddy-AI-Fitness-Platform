@@ -45,11 +45,13 @@ def health_check():
 
 @app.get("/food/history/{user_id}")
 def get_user_food_history(user_id: str):
-    cursor = analysis_collection.find({"userId": user_id}).sort("timestamp", -1)
+    cursor = analysis_collection.find({"userId": user_id})
     history = []
     for doc in cursor:
         doc["_id"] = str(doc["_id"])
         history.append(doc)
+    # Sort in-memory to avoid CosmosDB missing index error
+    history.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
     return history
 
 @app.post("/analyze-food")
