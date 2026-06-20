@@ -60,6 +60,11 @@ async def analyze_food(
     userId: str = Form(...),
     file: UploadFile = File(...)
 ):
+    # Validate file extension
+    valid_extensions = (".jpg", ".jpeg", ".png")
+    if not file.filename.lower().endswith(valid_extensions):
+        return {"error": f"Unsupported format. Please upload JPEG or PNG instead of {file.filename.split('.')[-1]}.", "processed": False}
+
     # Save temporary file locally
     temp_dir = "temp_images"
     os.makedirs(temp_dir, exist_ok=True)
