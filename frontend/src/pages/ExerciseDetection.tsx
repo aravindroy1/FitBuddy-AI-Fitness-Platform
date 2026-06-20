@@ -90,9 +90,19 @@ export const ExerciseDetection: React.FC = () => {
     }
   };
 
-  // Live Canvas Animation (Squat Stick-man simulation or Real WebSockets Webcam feed)
+  // Live Canvas Animation & MediaRecorder
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<BlobPart[]>([]);
+  const liveRepsRef = useRef(0);
+  const liveAccuracyRef = useRef(95);
+  const liveFeedbackRef = useRef<string[]>([]);
+
   useEffect(() => {
     if (!isLive) {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+      
       // Clean up stream and websocket
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
@@ -113,13 +123,11 @@ export const ExerciseDetection: React.FC = () => {
 
     const startCameraAndWS = async () => {
       try {
-        // Start websocket connection
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/api/exercise/exercise/ws-stream`;
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
-        // Try getting webcam stream
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 480, height: 360, frameRate: 15 }
         });
@@ -132,7 +140,42 @@ export const ExerciseDetection: React.FC = () => {
 
         streamRef.current = stream;
 
-        // Create a hidden video element to feed the stream
+        // Start MediaRecorder for saving the session
+        recordedChunksRef.current = [];
+        const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+        mediaRecorderRef.current = mediaRecorder;
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            recordedChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+          const file = new File([blob], 'live_session.webm', { type: 'video/webm' });
+          
+          setLoading(true);
+          try {
+            const userId = localStorage.getItem('userId') || 'anon_user';
+            const res = await api.exercise.uploadLiveSession(
+              userId, 
+              exercise, 
+              file, 
+              liveRepsRef.current, 
+              liveAccuracyRef.current, 
+              liveFeedbackRef.current.join('|')
+            );
+            setResult(res.data);
+          } catch (err) {
+            console.error("Failed to upload live session", err);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        mediaRecorder.start();
+
         const video = document.createElement('video');
         video.srcObject = stream;
         video.setAttribute('playsinline', 'true');
@@ -140,7 +183,6 @@ export const ExerciseDetection: React.FC = () => {
         video.play();
         videoRef.current = video;
 
-        // Set up canvas for rendering
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
@@ -151,7 +193,6 @@ export const ExerciseDetection: React.FC = () => {
           try {
             const response = JSON.parse(event.data);
             
-            // Draw processed image on canvas
             if (response.image) {
               const img = new Image();
               img.onload = () => {
@@ -163,20 +204,20 @@ export const ExerciseDetection: React.FC = () => {
 
             if (response.rep_count !== undefined) {
               setLiveReps(response.rep_count);
+              liveRepsRef.current = response.rep_count;
             }
             if (response.feedback) {
               setLiveFeedback(response.feedback);
+              liveFeedbackRef.current = response.feedback;
             }
           } catch (e) {
             console.error("Error parsing WS frame response:", e);
           }
         };
 
-        // Frame sending loop
         const sendFrame = () => {
           if (!active || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
           if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            // Create a temporary canvas to resize and compress frame
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = 320;
             tempCanvas.height = 240;
@@ -184,31 +225,23 @@ export const ExerciseDetection: React.FC = () => {
             if (tempCtx) {
               tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
               const base64Img = tempCanvas.toDataURL('image/jpeg', 0.6);
-              
               wsRef.current.send(JSON.stringify({
                 image: base64Img,
                 exercise: exercise
               }));
             }
           }
-          // Cap at ~10 FPS for network reliability
           setTimeout(sendFrame, 100);
         };
 
-        ws.onopen = () => {
-          sendFrame();
-        };
-
-        ws.onerror = (err) => {
-          console.error("WebSocket error:", err);
-        };
+        ws.onopen = () => sendFrame();
+        ws.onerror = (err) => console.error("WebSocket error:", err);
 
       } catch (err) {
-        console.warn("Webcam access blocked or unavailable. Falling back to simulation.", err);
-        setError("Browser blocked webcam access. Browsers require HTTPS or localhost for cameras. To fix this: Type chrome://flags/#unsafely-treat-insecure-origin-as-secure in Chrome, add this IP address, enable it, and restart Chrome.");
+        console.warn("Webcam access blocked or unavailable.", err);
+        setError("Browser blocked webcam access. To fix this: Type chrome://flags/#unsafely-treat-insecure-origin-as-secure in Chrome, add this IP address, enable it, and restart Chrome.");
       }
     };
-
 
     startCameraAndWS();
 
@@ -220,6 +253,9 @@ export const ExerciseDetection: React.FC = () => {
       }
       if (wsRef.current) {
         wsRef.current.close();
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
       }
     };
   }, [isLive, exercise]);

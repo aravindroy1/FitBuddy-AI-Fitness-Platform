@@ -62,13 +62,6 @@ jobs:
           push: true
           tags: ${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-workout-service:latest
 
-      - name: Build and Push Food Recognition Service
-        uses: docker/build-push-action@v4
-        with:
-          context: ./services/food-recognition-service
-          push: true
-          tags: ${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-food-recognition-service:latest
-
       - name: Build and Push YOLO Exercise Service
         uses: docker/build-push-action@v4
         with:

@@ -18,7 +18,6 @@ export const Sidebar: React.FC = () => {
     { name: 'Workout Planner', path: '/workout', icon: Dumbbell },
     { name: 'AI Fitness Coach', path: '/coach', icon: Bot },
     { name: 'Exercise Detection', path: '/exercise', icon: Video },
-    { name: 'Food Recognition', path: '/food', icon: Camera },
     { name: 'Medical Reports', path: '/reports', icon: FileText },
     { name: 'Profile Settings', path: '/profile', icon: Settings }
   ];

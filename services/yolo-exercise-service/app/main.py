@@ -104,6 +104,64 @@ async def analyze_video(
 
     return result
 
+@app.post("/upload-live-session")
+async def upload_live_session(
+    background_tasks: BackgroundTasks,
+    userId: str = Form(...),
+    exercise: str = Form("squat"),
+    rep_count: int = Form(0),
+    form_accuracy: float = Form(0.0),
+    feedback: str = Form(""),
+    file: UploadFile = File(...)
+):
+    temp_dir = "temp_videos"
+    os.makedirs(temp_dir, exist_ok=True)
+    
+    unique_filename = f"{userId}_{int(time.time())}_{file.filename}"
+    file_path = os.path.join(temp_dir, unique_filename)
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    result = {
+        "userId": userId,
+        "exercise": exercise.capitalize(),
+        "rep_count": rep_count,
+        "form_accuracy": form_accuracy,
+        "feedback": feedback.split("|") if feedback else [],
+        "processed": True,
+        "videoUrl": file.filename,
+        "timestamp": time.time()
+    }
+    
+    # Upload to Azure Blob Storage
+    blob_url = blob_uploader.upload_file(file_path, unique_filename, BLOB_CONTAINER)
+    if blob_url:
+        result["blobUrl"] = blob_url
+
+    # Save to Database
+    inserted = analysis_collection.insert_one(result)
+    result["_id"] = str(inserted.inserted_id)
+
+    # Retention Logic: Keep only the latest 2 videos
+    cursor = analysis_collection.find({"userId": userId})
+    history = list(cursor)
+    history.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
+    
+    if len(history) > 2:
+        for old_doc in history[2:]:
+            # Delete from Blob Storage
+            old_blob_url = old_doc.get("blobUrl")
+            if old_blob_url and "/" in old_blob_url:
+                old_blob_name = old_blob_url.split("/")[-1]
+                blob_uploader.delete_blob(BLOB_CONTAINER, old_blob_name)
+            # Delete from DB
+            analysis_collection.delete_one({"_id": old_doc["_id"]})
+
+    # Clean up temp file
+    background_tasks.add_task(os.remove, file_path)
+    return result
+
 @app.websocket("/exercise/ws-stream")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()

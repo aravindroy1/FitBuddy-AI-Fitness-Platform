@@ -85,14 +85,16 @@ export const api = {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
     }
-  },
-  food: {
-    getHistory: (userId: string) => foodApi.get(`/food/history/${userId}`),
-    analyze: (userId: string, file: File) => {
+    },
+    uploadLiveSession: (userId: string, exercise: string, file: File, repCount: number, formAccuracy: number, feedback: string) => {
       const formData = new FormData();
       formData.append('userId', userId);
+      formData.append('exercise', exercise);
       formData.append('file', file);
-      return foodApi.post('/analyze-food', formData, {
+      formData.append('rep_count', repCount.toString());
+      formData.append('form_accuracy', formAccuracy.toString());
+      formData.append('feedback', feedback);
+      return exerciseApi.post('/upload-live-session', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
     }

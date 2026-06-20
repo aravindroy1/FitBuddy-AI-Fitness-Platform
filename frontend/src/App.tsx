@@ -17,7 +17,7 @@ import { DietPlanner } from './pages/DietPlanner.js';
 import { WorkoutPlanner } from './pages/WorkoutPlanner.js';
 import { AICoach } from './pages/AICoach.js';
 import { ExerciseDetection } from './pages/ExerciseDetection.js';
-import { FoodAnalysis } from './pages/FoodAnalysis.js';
+
 import { MedicalReports } from './pages/MedicalReports.js';
 import { Profile } from './pages/Profile.js';
 
@@ -83,16 +83,7 @@ export const App: React.FC = () => {
               </GuardedRoute>
             }
           />
-          <Route
-            path="/food"
-            element={
-              <GuardedRoute>
-                <Layout>
-                  <FoodAnalysis />
-                </Layout>
-              </GuardedRoute>
-            }
-          />
+
           <Route
             path="/reports"
             element={

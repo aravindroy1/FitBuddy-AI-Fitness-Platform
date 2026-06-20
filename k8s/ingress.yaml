@@ -73,15 +73,6 @@ spec:
             port:
               number: 8001
 
-      # Food recognition CV routing
-      - path: /api/food
-        pathType: Prefix
-        backend:
-          service:
-            name: food-recognition-service
-            port:
-              number: 8002
-
       # React Web App Frontend assets fallback routing
       - path: /
         pathType: Prefix

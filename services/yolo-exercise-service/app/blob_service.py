@@ -41,3 +41,15 @@ class BlobUploader:
         except Exception as e:
             logger.error(f"Failed to upload file to Blob Storage: {e}")
             return ""
+
+    def delete_blob(self, container_name: str, blob_name: str):
+        if not self.blob_service_client:
+            return False
+        try:
+            blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+            blob_client.delete_blob()
+            logger.info(f"Successfully deleted {blob_name} from container {container_name}.")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to delete blob {blob_name}: {e}")
+            return False
