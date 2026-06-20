@@ -46,15 +46,8 @@ class ExerciseProcessor:
         """
         try:
             if not self.model:
-                # High-fidelity mock response
-                logger.info("Running mock video process...")
-                return {
-                    "exercise": exercise_name.capitalize(),
-                    "rep_count": 12,
-                    "form_accuracy": 92.5,
-                    "feedback": ["Keep chest upright during deep squats", "Good knee alignment in outer range"],
-                    "processed": True
-                }
+                logger.error("YOLOv8 Pose model is not available.")
+                return {"error": "YOLO model failed to initialize on the backend.", "processed": False}
 
             cap = cv2.VideoCapture(video_path)
             if not cap.isOpened():

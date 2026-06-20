@@ -32,14 +32,14 @@ spec:
           httpGet:
             path: /health
             port: 8002
-          initialDelaySeconds: 30
-          periodSeconds: 20
+          initialDelaySeconds: 120
+          periodSeconds: 30
         readinessProbe:
           httpGet:
             path: /health
             port: 8002
-          initialDelaySeconds: 15
-          periodSeconds: 10
+          initialDelaySeconds: 60
+          periodSeconds: 20
         env:
         - name: PORT
           valueFrom:
@@ -56,6 +56,11 @@ spec:
             secretKeyRef:
               name: bodygpt-secrets
               key: AZURE_SERVICEBUS_CONNECTION_STRING
+        - name: AZURE_STORAGE_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: bodygpt-secrets
+              key: AZURE_STORAGE_CONNECTION_STRING
 ---
 apiVersion: v1
 kind: Service
