@@ -65,22 +65,11 @@ export const DietPlanner: React.FC = () => {
       });
       setDiet(res.data);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to contact AI Foundry. Loaded calculated local plan.');
-      // Local calculation backup logic
-      const targetCalories = profile.fitnessGoal === 'weight_loss' ? 1800 : 2500;
-      const calculatedPlan = {
-        calories: targetCalories,
-        protein: Math.round((targetCalories * 0.35) / 4),
-        carbs: Math.round((targetCalories * 0.4) / 4),
-        fat: Math.round((targetCalories * 0.25) / 9),
-        meals: [
-          { name: 'Breakfast', foodItems: ['Oatmeal with Almond Milk', '4 Egg Whites Scrambled'], calories: 400, protein: 30, carbs: 45, fat: 8 },
-          { name: 'Lunch', foodItems: ['Grilled Salmon (150g)', 'Baked Sweet Potato (120g)', 'Asparagus'], calories: 550, protein: 42, carbs: 35, fat: 18 },
-          { name: 'Snack', foodItems: ['Whey Protein Scoop', 'Rice Cakes (2)'], calories: 250, protein: 26, carbs: 22, fat: 2 },
-          { name: 'Dinner', foodItems: ['Lean Ground Turkey (180g)', 'Quinoa (100g)', 'Broccoli'], calories: 600, protein: 48, carbs: 40, fat: 12 }
-        ]
-      };
-      setDiet(calculatedPlan);
+      if (err.response?.status === 400 || !profile?.height) {
+        setError('Please update your profile settings with your height, weight, and fitness goals to generate a custom plan.');
+      } else {
+        setError(err.response?.data?.error || 'Failed to contact AI Foundry.');
+      }
     } finally {
       setLoading(false);
     }

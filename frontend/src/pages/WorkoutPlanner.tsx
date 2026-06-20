@@ -58,24 +58,11 @@ export const WorkoutPlanner: React.FC = () => {
       const res = await api.workout.generate(workoutType, goal);
       setWorkout(res.data);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to contact AI Foundry. Loaded calculated local plan.');
-      // Local fallback routine
-      const calculatedWorkout: WorkoutPlan = {
-        type: workoutType,
-        split: workoutType === 'gym' ? 'Full Body Hypertrophy' : 'Bodyweight HIIT Circuit',
-        exercises: workoutType === 'gym' ? [
-          { name: 'Dumbbell Bench Press', sets: 4, reps: '10', weight: '24kg each', restSeconds: 90, targetMuscle: 'Chest' },
-          { name: 'Lat Pulldown', sets: 4, reps: '12', weight: '55kg', restSeconds: 60, targetMuscle: 'Back' },
-          { name: 'Leg Press', sets: 3, reps: '12', weight: '120kg', restSeconds: 90, targetMuscle: 'Legs' },
-          { name: 'Dumbbell Shoulder Press', sets: 3, reps: '10', weight: '16kg each', restSeconds: 75, targetMuscle: 'Shoulders' }
-        ] : [
-          { name: 'Bodyweight Squats', sets: 4, reps: '20', restSeconds: 45, targetMuscle: 'Legs' },
-          { name: 'Push-Ups', sets: 4, reps: '15', restSeconds: 45, targetMuscle: 'Chest' },
-          { name: 'Glute Bridges', sets: 3, reps: '20', restSeconds: 30, targetMuscle: 'Glutes' },
-          { name: 'Bicycle Crunches', sets: 3, reps: '45 sec', restSeconds: 30, targetMuscle: 'Core' }
-        ]
-      };
-      setWorkout(calculatedWorkout);
+      if (err.response?.status === 400 || !profile?.fitnessGoal) {
+        setError('Please update your profile settings with your fitness goals to generate a custom workout.');
+      } else {
+        setError(err.response?.data?.error || 'Failed to contact AI Foundry.');
+      }
     } finally {
       setLoading(false);
     }
