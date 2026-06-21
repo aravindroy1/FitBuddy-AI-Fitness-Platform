@@ -97,10 +97,12 @@ jobs:
     needs: build-scan-push
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout ArgoCD GitOps Repository
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: FitBuddy-AI-Fitness/fitbuddy-argocd
+          token: ${{ secrets.GITOPS_PAT }}
+          path: argocd-repo
 
       - name: Determine Environment and Tag
         id: env_config
@@ -114,16 +116,18 @@ jobs:
           fi
 
       - name: Update Kubernetes Manifests for ArgoCD
+        working-directory: ./argocd-repo
         run: |
           find ./k8s -name "*.yaml" -type f -exec sed -i "s|${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-\(.*\):[a-zA-Z0-9.-]*|${{ secrets.ACR_LOGIN_SERVER }}/fitbuddy-\1:${{ env.TAG }}|g" {} +
 
       - name: Commit and Push Changes
+        working-directory: ./argocd-repo
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add k8s/
           git commit -m "chore: update image tags to ${{ env.TAG }} for ArgoCD" || echo "No changes to commit"
-          git push origin ${{ github.ref_name }}
+          git push origin main
 
       - name: Send Email Notification
         uses: dawidd6/action-send-mail@v3
